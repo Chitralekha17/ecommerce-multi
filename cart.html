@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cart & Checkout — LUXE</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --cream:#F5F0E8; --charcoal:#1A1A18; --gold:#C9A84C; --gold-light:#E8D49A; --muted:#6B6B5F; --border:#E0D8CC; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--cream); color:var(--charcoal); font-family:'DM Sans',sans-serif; }
+
+  nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:22px 60px; background:rgba(245,240,232,0.95); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .nav-logo { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600; letter-spacing:6px; color:var(--charcoal); text-decoration:none; }
+  .nav-links { display:flex; gap:38px; list-style:none; }
+  .nav-links a { font-size:12px; font-weight:500; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.3s; }
+  .nav-links a:hover { color:var(--charcoal); }
+  .nav-right { display:flex; gap:20px; align-items:center; }
+  .nav-icon { background:none; border:none; cursor:pointer; font-size:20px; color:var(--charcoal); position:relative; transition:transform 0.2s; }
+  .nav-icon:hover { transform:scale(1.15); }
+  .cart-badge { position:absolute; top:-6px; right:-6px; background:var(--gold); color:#fff; border-radius:50%; width:16px; height:16px; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+  /* STEPS */
+  .steps { display:flex; justify-content:center; padding:36px 60px; gap:0; border-bottom:1px solid var(--border); }
+  .step { display:flex; align-items:center; gap:12px; }
+  .step-num { width:32px; height:32px; border-radius:50%; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:500; transition:all 0.3s; }
+  .step.active .step-num, .step.done .step-num { background:var(--charcoal); color:var(--cream); border-color:var(--charcoal); }
+  .step.done .step-num { background:var(--gold); border-color:var(--gold); }
+  .step-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+  .step.active .step-label { color:var(--charcoal); font-weight:500; }
+  .step-line { width:80px; height:1px; background:var(--border); margin:0 20px; }
+
+  /* MAIN LAYOUT */
+  .cart-layout { display:grid; grid-template-columns:1fr 380px; gap:60px; padding:60px; min-height:60vh; }
+
+  /* CART PANEL */
+  .cart-panel-title { font-family:'Cormorant Garamond',serif; font-size:clamp(28px,3vw,44px); font-weight:300; margin-bottom:36px; }
+  .cart-panel-title em { font-style:italic; color:var(--gold); }
+
+  /* CART ITEMS */
+  .cart-items { display:flex; flex-direction:column; gap:0; }
+  .cart-item { display:grid; grid-template-columns:80px 1fr auto; gap:20px; padding:24px 0; border-bottom:1px solid var(--border); align-items:center; animation:fadeUp 0.4s ease both; }
+  .cart-item-img { width:80px; height:100px; background:linear-gradient(135deg,#2a2a24,#3d3d35); display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; }
+  .cart-item-info {}
+  .cart-item-category { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .cart-item-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; margin-bottom:6px; }
+  .cart-item-variant { font-size:12px; color:var(--muted); margin-bottom:12px; }
+  .qty-ctrl { display:flex; align-items:center; gap:0; }
+  .qty-btn { width:28px; height:28px; border:1px solid var(--border); background:none; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:background 0.2s; }
+  .qty-btn:hover { background:var(--charcoal); color:var(--cream); }
+  .qty-val { width:36px; height:28px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); border-left:none; border-right:none; text-align:center; font-family:'DM Sans',sans-serif; font-size:13px; outline:none; background:none; }
+  .cart-item-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
+  .cart-item-price { font-size:18px; font-weight:500; }
+  .remove-btn { background:none; border:none; cursor:pointer; font-size:13px; color:var(--muted); letter-spacing:1px; padding:4px; transition:color 0.2s; text-transform:uppercase; font-size:10px; font-family:'DM Sans',sans-serif; }
+  .remove-btn:hover { color:var(--charcoal); }
+
+  /* EMPTY STATE */
+  .cart-empty { text-align:center; padding:80px 0; display:none; }
+  .cart-empty-icon { font-size:64px; margin-bottom:24px; }
+  .cart-empty-title { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:300; margin-bottom:12px; }
+  .cart-empty-text { color:var(--muted); font-size:14px; margin-bottom:32px; }
+
+  /* COUPON */
+  .coupon-row { display:flex; gap:0; margin-top:32px; }
+  .coupon-input { flex:1; border:1px solid var(--border); border-right:none; background:none; padding:12px 16px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--charcoal); outline:none; }
+  .coupon-input:focus { border-color:var(--charcoal); }
+  .coupon-btn { background:var(--charcoal); color:var(--cream); border:none; padding:12px 24px; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.3s; }
+  .coupon-btn:hover { background:var(--gold); }
+  .coupon-success { font-size:12px; color:var(--gold); margin-top:8px; display:none; }
+
+  /* ORDER SUMMARY */
+  .summary-card { background:var(--charcoal); color:var(--cream); padding:40px; position:sticky; top:88px; height:fit-content; }
+  .summary-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:300; margin-bottom:32px; }
+  .summary-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:13px; }
+  .summary-row .label { color:rgba(245,240,232,0.6); }
+  .summary-row.total { font-size:20px; font-weight:500; border-top:1px solid rgba(245,240,232,0.15); padding-top:20px; margin-top:8px; }
+  .summary-row.discount .value { color:var(--gold); }
+  .summary-divider { border:none; border-top:1px solid rgba(245,240,232,0.1); margin:20px 0; }
+  .checkout-btn { width:100%; margin-top:28px; background:var(--gold); color:var(--charcoal); border:none; padding:18px; font-size:11px; letter-spacing:4px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:700; transition:transform 0.2s, filter 0.2s; }
+  .checkout-btn:hover { transform:translateY(-2px); filter:brightness(1.08); }
+  .checkout-btn:active { transform:none; }
+  .summary-perks { margin-top:24px; display:flex; flex-direction:column; gap:10px; }
+  .perk { display:flex; align-items:center; gap:10px; font-size:11px; color:rgba(245,240,232,0.5); }
+  .perk-icon { color:var(--gold); font-size:14px; }
+
+  /* CHECKOUT FORM */
+  #checkout-section { display:none; }
+  .form-title { font-family:'Cormorant Garamond',serif; font-size:clamp(28px,3vw,44px); font-weight:300; margin-bottom:36px; }
+  .form-section { margin-bottom:40px; }
+  .form-section-title { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:20px; font-weight:500; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-grid.full { grid-template-columns:1fr; }
+  .form-field { display:flex; flex-direction:column; gap:6px; }
+  .form-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+  .form-input { border:1px solid var(--border); background:none; padding:13px 16px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--charcoal); outline:none; transition:border-color 0.2s; }
+  .form-input:focus { border-color:var(--charcoal); }
+  .form-input.error { border-color:#c0392b; }
+  .payment-options { display:flex; gap:12px; margin-bottom:20px; }
+  .payment-option { flex:1; border:1px solid var(--border); padding:14px; cursor:pointer; text-align:center; font-size:13px; transition:all 0.2s; }
+  .payment-option.selected { border-color:var(--charcoal); background:var(--charcoal); color:var(--cream); }
+  .pay-btn { background:var(--charcoal); color:var(--cream); border:none; width:100%; padding:18px; font-size:11px; letter-spacing:4px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; transition:background 0.3s; margin-top:24px; }
+  .pay-btn:hover { background:var(--gold); }
+  .back-btn { background:none; border:1px solid var(--border); color:var(--charcoal); padding:14px 32px; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; margin-bottom:24px; transition:all 0.2s; }
+  .back-btn:hover { border-color:var(--charcoal); }
+
+  /* SUCCESS */
+  #success-section { display:none; text-align:center; padding:80px 60px; }
+  .success-icon { font-size:72px; margin-bottom:24px; animation:pop 0.6s cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes pop { from{transform:scale(0.5);opacity:0;} to{transform:none;opacity:1;} }
+  .success-title { font-family:'Cormorant Garamond',serif; font-size:clamp(36px,4vw,56px); font-weight:300; margin-bottom:16px; }
+  .success-title em { font-style:italic; color:var(--gold); }
+  .success-text { color:var(--muted); font-size:15px; line-height:1.8; max-width:480px; margin:0 auto 40px; }
+  .success-order { background:var(--charcoal); color:var(--cream); display:inline-block; padding:16px 40px; font-family:'Cormorant Garamond',serif; font-size:18px; letter-spacing:4px; margin-bottom:40px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:30px; right:30px; z-index:1000; background:var(--charcoal); color:var(--cream); padding:16px 28px; font-size:13px; transform:translateY(100px); opacity:0; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); display:flex; align-items:center; gap:10px; }
+  .toast.show { transform:none; opacity:1; }
+  .toast-icon { color:var(--gold); }
+
+  footer { background:var(--charcoal); color:var(--cream); padding:40px 60px; display:flex; justify-content:space-between; align-items:center; margin-top:80px; }
+  .footer-logo { font-family:'Cormorant Garamond',serif; font-size:22px; letter-spacing:5px; }
+  .footer-copy { font-size:12px; color:rgba(245,240,232,0.3); }
+  .footer-links-row { display:flex; gap:24px; }
+  .footer-links-row a { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(245,240,232,0.5); text-decoration:none; transition:color 0.3s; }
+  .footer-links-row a:hover { color:var(--cream); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:none;} }
+
+  @media(max-width:900px) {
+    nav { padding:18px 24px; }
+    .nav-links { display:none; }
+    .steps { padding:24px; gap:0; }
+    .step-line { width:40px; margin:0 8px; }
+    .cart-layout { grid-template-columns:1fr; padding:24px; gap:40px; }
+    .summary-card { position:static; }
+    .form-grid { grid-template-columns:1fr; }
+    footer { flex-direction:column; gap:20px; padding:30px 24px; }
+    #success-section { padding:60px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">LUXE</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html">Shop</a></li>
+    <li><a href="shop.html">Collections</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-icon" onclick="window.location.href='shop.html'">🔍</button>
+    <button class="nav-icon" style="position:relative">
+      🛒<span class="cart-badge" id="nav-cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- STEPS -->
+<div class="steps">
+  <div class="step active" id="step-1">
+    <div class="step-num">1</div>
+    <span class="step-label">Cart</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step" id="step-2">
+    <div class="step-num">2</div>
+    <span class="step-label">Checkout</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step" id="step-3">
+    <div class="step-num">3</div>
+    <span class="step-label">Confirmation</span>
+  </div>
+</div>
+
+<!-- CART SECTION -->
+<div id="cart-section">
+  <div class="cart-layout">
+    <div class="cart-left">
+      <h1 class="cart-panel-title">Your <em>Cart</em></h1>
+
+      <!-- Empty state -->
+      <div class="cart-empty" id="cart-empty">
+        <div class="cart-empty-icon">🛒</div>
+        <h2 class="cart-empty-title">Your cart is empty</h2>
+        <p class="cart-empty-text">Looks like you haven't added anything yet.</p>
+        <a href="shop.html" class="btn-primary" style="background:var(--charcoal);color:var(--cream);padding:16px 40px;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:500;border:none;cursor:pointer;text-decoration:none;display:inline-block;">Explore Shop</a>
+      </div>
+
+      <!-- Cart items -->
+      <div class="cart-items" id="cart-items"></div>
+
+      <!-- Coupon -->
+      <div id="coupon-area" style="display:none;">
+        <div class="coupon-row">
+          <input class="coupon-input" id="coupon-input" placeholder="Enter coupon code" type="text">
+          <button class="coupon-btn" onclick="applyCoupon()">Apply</button>
+        </div>
+        <p class="coupon-success" id="coupon-success">✓ Coupon LUXE20 applied — 20% off!</p>
+      </div>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="summary-card" id="summary-card">
+      <h2 class="summary-title">Order Summary</h2>
+      <div class="summary-row"><span class="label">Subtotal</span><span class="value" id="sum-subtotal">$0.00</span></div>
+      <div class="summary-row discount" id="sum-discount-row" style="display:none"><span class="label">Discount (20%)</span><span class="value" id="sum-discount">-$0.00</span></div>
+      <div class="summary-row"><span class="label">Shipping</span><span class="value" id="sum-shipping">$15.00</span></div>
+      <div class="summary-row"><span class="label">Tax (8%)</span><span class="value" id="sum-tax">$0.00</span></div>
+      <hr class="summary-divider">
+      <div class="summary-row total"><span class="label">Total</span><span class="value" id="sum-total">$0.00</span></div>
+      <button class="checkout-btn" id="checkout-btn" onclick="goToCheckout()">Proceed to Checkout →</button>
+      <div class="summary-perks">
+        <div class="perk"><span class="perk-icon">🚚</span> Free shipping on orders over $150</div>
+        <div class="perk"><span class="perk-icon">↩️</span> Free 30-day returns</div>
+        <div class="perk"><span class="perk-icon">🔒</span> Secure payment</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT SECTION -->
+<div id="checkout-section">
+  <div class="cart-layout">
+    <div>
+      <button class="back-btn" onclick="goBackToCart()">← Back to Cart</button>
+      <h1 class="form-title">Checkout</h1>
+
+      <div class="form-section">
+        <p class="form-section-title">Contact Information</p>
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">First Name</label>
+            <input class="form-input" id="f-fname" type="text" placeholder="Jane">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" id="f-lname" type="text" placeholder="Doe">
+          </div>
+        </div>
+        <div class="form-grid full" style="margin-top:16px">
+          <div class="form-field">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="f-email" type="email" placeholder="jane@example.com">
+          </div>
+        </div>
+        <div class="form-grid full" style="margin-top:16px">
+          <div class="form-field">
+            <label class="form-label">Phone</label>
+            <input class="form-input" id="f-phone" type="tel" placeholder="+1 234 567 8900">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Shipping Address</p>
+        <div class="form-grid full">
+          <div class="form-field">
+            <label class="form-label">Street Address</label>
+            <input class="form-input" id="f-address" type="text" placeholder="123 Main Street">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:16px">
+          <div class="form-field">
+            <label class="form-label">City</label>
+            <input class="form-input" id="f-city" type="text" placeholder="New York">
+          </div>
+          <div class="form-field">
+            <label class="form-label">ZIP Code</label>
+            <input class="form-input" id="f-zip" type="text" placeholder="10001">
+          </div>
+        </div>
+        <div class="form-grid" style="margin-top:16px">
+          <div class="form-field">
+            <label class="form-label">State</label>
+            <input class="form-input" id="f-state" type="text" placeholder="New York">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Country</label>
+            <input class="form-input" id="f-country" type="text" placeholder="United States">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="form-section-title">Payment Method</p>
+        <div class="payment-options">
+          <div class="payment-option selected" onclick="selectPayment(this)">💳 Card</div>
+          <div class="payment-option" onclick="selectPayment(this)">🍎 Apple Pay</div>
+          <div class="payment-option" onclick="selectPayment(this)">🅿️ PayPal</div>
+        </div>
+        <div id="card-fields">
+          <div class="form-grid full">
+            <div class="form-field">
+              <label class="form-label">Card Number</label>
+              <input class="form-input" id="f-card" type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:16px">
+            <div class="form-field">
+              <label class="form-label">Expiry</label>
+              <input class="form-input" id="f-expiry" type="text" placeholder="MM / YY" maxlength="7">
+            </div>
+            <div class="form-field">
+              <label class="form-label">CVV</label>
+              <input class="form-input" id="f-cvv" type="text" placeholder="•••" maxlength="4">
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="pay-btn" onclick="placeOrder()">Place Order & Pay <span id="pay-total-btn"></span></button>
+    </div>
+
+    <div class="summary-card" style="position:sticky;top:88px;height:fit-content">
+      <h2 class="summary-title">Order Summary</h2>
+      <div id="checkout-items-summary"></div>
+      <hr class="summary-divider">
+      <div class="summary-row"><span class="label">Subtotal</span><span class="value" id="co-subtotal"></span></div>
+      <div class="summary-row discount" id="co-discount-row" style="display:none"><span class="label">Discount</span><span class="value" id="co-discount"></span></div>
+      <div class="summary-row"><span class="label">Shipping</span><span class="value" id="co-shipping"></span></div>
+      <div class="summary-row"><span class="label">Tax</span><span class="value" id="co-tax"></span></div>
+      <hr class="summary-divider">
+      <div class="summary-row total"><span>Total</span><span id="co-total"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS SECTION -->
+<div id="success-section">
+  <div class="success-icon">✅</div>
+  <h1 class="success-title">Order <em>Confirmed</em></h1>
+  <p class="success-text">Thank you for your purchase! Your order has been received and is now being processed. You will receive a confirmation email shortly.</p>
+  <div class="success-order" id="order-number">ORDER #LX-0000</div>
+  <br>
+  <a href="shop.html" style="background:var(--charcoal);color:var(--cream);padding:16px 48px;font-size:11px;letter-spacing:4px;text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:500;border:none;cursor:pointer;text-decoration:none;display:inline-block;">Continue Shopping</a>
+</div>
+
+<footer>
+  <div class="footer-logo">LUXE</div>
+  <div class="footer-links-row">
+    <a href="#">Help</a><a href="#">Shipping</a><a href="#">Returns</a>
+  </div>
+  <p class="footer-copy">© 2025 LUXE</p>
+</footer>
+
+<div class="toast" id="toast"><span class="toast-icon">✓</span><span id="toast-msg"></span></div>
+
+<script>
+let discount = 0;
+let couponApplied = false;
+
+function getCart() { try { return JSON.parse(localStorage.getItem('luxe_cart')||'[]'); } catch { return []; } }
+function saveCart(c) { localStorage.setItem('luxe_cart',JSON.stringify(c)); }
+
+function calcTotals() {
+  const cart = getCart();
+  const subtotal = cart.reduce((a,b) => a + (parseFloat(b.price.replace('$',''))*b.qty), 0);
+  const discountAmt = couponApplied ? subtotal * 0.2 : 0;
+  const afterDiscount = subtotal - discountAmt;
+  const shipping = subtotal > 150 ? 0 : 15;
+  const tax = afterDiscount * 0.08;
+  const total = afterDiscount + shipping + tax;
+  return { subtotal, discountAmt, shipping, tax, total };
+}
+
+function renderCart() {
+  const cart = getCart();
+  const itemsEl = document.getElementById('cart-items');
+  const emptyEl = document.getElementById('cart-empty');
+  const couponArea = document.getElementById('coupon-area');
+  itemsEl.innerHTML = '';
+  if (!cart.length) {
+    emptyEl.style.display = 'block';
+    couponArea.style.display = 'none';
+  } else {
+    emptyEl.style.display = 'none';
+    couponArea.style.display = 'block';
+    const emojis = {'Cashmere Overcoat':'🧥','Structured Leather Tote':'👜','Leather Tote':'👜','Block Heel Mule':'👠','Heel Mule':'👠','Silk Wrap Dress':'👗','Merino Crewneck':'👕','Gold Chain Necklace':'📿','Suede Chelsea Boot':'👢','Linen Wide Trousers':'👖','Slim Wool Blazer':'🧣','Mini Crossbody Bag':'👛','Diamond Stud Earrings':'💎','Tailored Trench Coat':'🥼'};
+    cart.forEach((item,i) => {
+      const emoji = emojis[item.name] || '🛍️';
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.style.animationDelay = (i*0.08)+'s';
+      div.innerHTML = `
+        <div class="cart-item-img">${emoji}</div>
+        <div class="cart-item-info">
+          <p class="cart-item-category">LUXE Original</p>
+          <h3 class="cart-item-name">${item.name}</h3>
+          <p class="cart-item-variant">Size: M · Color: Classic</p>
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+            <input class="qty-val" value="${item.qty}" type="number" min="1" onchange="setQty(${i},this.value)">
+            <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+          </div>
+        </div>
+        <div class="cart-item-right">
+          <span class="cart-item-price">$${(parseFloat(item.price.replace('$',''))*item.qty).toFixed(2)}</span>
+          <button class="remove-btn" onclick="removeItem(${i})">Remove</button>
+        </div>`;
+      itemsEl.appendChild(div);
+    });
+  }
+  updateSummary();
+  updateCartCount();
+}
+
+function updateSummary() {
+  const {subtotal,discountAmt,shipping,tax,total} = calcTotals();
+  document.getElementById('sum-subtotal').textContent = '$'+subtotal.toFixed(2);
+  document.getElementById('sum-shipping').textContent = shipping===0 ? 'Free' : '$'+shipping.toFixed(2);
+  document.getElementById('sum-tax').textContent = '$'+tax.toFixed(2);
+  document.getElementById('sum-total').textContent = '$'+total.toFixed(2);
+  if (couponApplied) {
+    document.getElementById('sum-discount-row').style.display='flex';
+    document.getElementById('sum-discount').textContent = '-$'+discountAmt.toFixed(2);
+  }
+  if (subtotal > 150) showToast('🎉 Free shipping unlocked!');
+}
+
+function updateCartCount() {
+  const count = getCart().reduce((a,b)=>a+b.qty,0);
+  document.getElementById('nav-cart-count').textContent = count;
+}
+function changeQty(i,d) {
+  const cart = getCart();
+  cart[i].qty = Math.max(1, cart[i].qty+d);
+  saveCart(cart); renderCart();
+}
+function setQty(i,v) {
+  const cart = getCart();
+  cart[i].qty = Math.max(1, parseInt(v)||1);
+  saveCart(cart); renderCart();
+}
+function removeItem(i) {
+  const cart = getCart();
+  const name = cart[i].name;
+  cart.splice(i,1);
+  saveCart(cart); renderCart();
+  showToast(`"${name}" removed`);
+}
+function applyCoupon() {
+  const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+  if (code==='LUXE20') {
+    couponApplied = true; discount=0.2;
+    document.getElementById('coupon-success').style.display='block';
+    updateSummary();
+    showToast('Coupon applied: 20% off!');
+  } else {
+    showToast('Invalid coupon code');
+  }
+}
+function goToCheckout() {
+  const cart = getCart();
+  if (!cart.length) { showToast('Your cart is empty'); return; }
+  document.getElementById('cart-section').style.display='none';
+  document.getElementById('checkout-section').style.display='block';
+  document.getElementById('step-1').classList.remove('active'); document.getElementById('step-1').classList.add('done');
+  document.getElementById('step-2').classList.add('active');
+  const {subtotal,discountAmt,shipping,tax,total} = calcTotals();
+  const emojis={'Cashmere Overcoat':'🧥','Structured Leather Tote':'👜','Leather Tote':'👜','Block Heel Mule':'👠','Heel Mule':'👠','Silk Wrap Dress':'👗','Merino Crewneck':'👕','Gold Chain Necklace':'📿','Suede Chelsea Boot':'👢','Linen Wide Trousers':'👖','Slim Wool Blazer':'🧣','Mini Crossbody Bag':'👛','Diamond Stud Earrings':'💎','Tailored Trench Coat':'🥼'};
+  document.getElementById('checkout-items-summary').innerHTML = cart.map(i=>`
+    <div class="summary-row" style="margin-bottom:10px">
+      <span>${emojis[i.name]||'🛍️'} ${i.name} ×${i.qty}</span>
+      <span>$${(parseFloat(i.price.replace('$',''))*i.qty).toFixed(2)}</span>
+    </div>`).join('');
+  document.getElementById('co-subtotal').textContent='$'+subtotal.toFixed(2);
+  document.getElementById('co-shipping').textContent=shipping===0?'Free':'$'+shipping.toFixed(2);
+  document.getElementById('co-tax').textContent='$'+tax.toFixed(2);
+  document.getElementById('co-total').textContent='$'+total.toFixed(2);
+  document.getElementById('pay-total-btn').textContent='— $'+total.toFixed(2);
+  if (couponApplied) {
+    document.getElementById('co-discount-row').style.display='flex';
+    document.getElementById('co-discount').textContent='-$'+discountAmt.toFixed(2);
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goBackToCart() {
+  document.getElementById('checkout-section').style.display='none';
+  document.getElementById('cart-section').style.display='block';
+  document.getElementById('step-2').classList.remove('active');
+  document.getElementById('step-1').classList.remove('done'); document.getElementById('step-1').classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function selectPayment(el) {
+  document.querySelectorAll('.payment-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function formatCard(e) {
+  let v=e.target.value.replace(/\D/g,'').substring(0,16);
+  v=v.replace(/(.{4})/g,'$1 ').trim();
+  e.target.value=v;
+}
+function formatExpiry(e) {
+  let v=e.target.value.replace(/\D/g,'').substring(0,4);
+  if(v.length>2) v=v.substring(0,2)+' / '+v.substring(2);
+  e.target.value=v;
+}
+function placeOrder() {
+  const fields=[['f-fname','First name'],['f-lname','Last name'],['f-email','Email'],['f-address','Address'],['f-city','City'],['f-zip','ZIP']];
+  let valid=true;
+  fields.forEach(([id,label])=>{
+    const el=document.getElementById(id);
+    if(!el||!el.value.trim()){
+      if(el) el.classList.add('error');
+      valid=false;
+    } else { if(el) el.classList.remove('error'); }
+  });
+  if(!valid){showToast('Please fill in all required fields');return;}
+  document.getElementById('checkout-section').style.display='none';
+  document.getElementById('success-section').style.display='block';
+  document.getElementById('step-2').classList.remove('active'); document.getElementById('step-2').classList.add('done');
+  document.getElementById('step-3').classList.add('active');
+  const ordNum='LX-'+Math.floor(100000+Math.random()*900000);
+  document.getElementById('order-number').textContent='ORDER #'+ordNum;
+  localStorage.removeItem('luxe_cart');
+  updateCartCount();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+document.getElementById('f-card') && document.getElementById('f-card').addEventListener('input',formatCard);
+document.getElementById('f-expiry') && document.getElementById('f-expiry').addEventListener('input',formatExpiry);
+renderCart();
+</script>
+</body>
+</html>
