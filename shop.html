@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — LUXE</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8; --charcoal: #1A1A18; --gold: #C9A84C;
+    --gold-light: #E8D49A; --muted: #6B6B5F; --border: #E0D8CC;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--cream); color: var(--charcoal); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 60px;
+    background: rgba(245,240,232,0.95); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:600; letter-spacing:6px; color:var(--charcoal); text-decoration:none; }
+  .nav-links { display:flex; gap:38px; list-style:none; }
+  .nav-links a { font-size:12px; font-weight:500; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.3s; }
+  .nav-links a:hover, .nav-links a.active { color:var(--charcoal); }
+  .nav-right { display:flex; gap:20px; align-items:center; }
+  .nav-icon { background:none; border:none; cursor:pointer; font-size:20px; color:var(--charcoal); position:relative; transition:transform 0.2s; }
+  .nav-icon:hover { transform:scale(1.15); }
+  .cart-badge { position:absolute; top:-6px; right:-6px; background:var(--gold); color:#fff; border-radius:50%; width:16px; height:16px; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+  /* PAGE HEADER */
+  .page-header {
+    padding: 60px 60px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .page-header-left {}
+  .breadcrumb { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+  .breadcrumb a { color:var(--muted); text-decoration:none; }
+  .breadcrumb a:hover { color:var(--charcoal); }
+  .page-title { font-family:'Cormorant Garamond',serif; font-size:clamp(40px,5vw,72px); font-weight:300; }
+  .page-title em { font-style:italic; color:var(--gold); }
+  .result-count { font-size:13px; color:var(--muted); }
+
+  /* LAYOUT */
+  .shop-layout { display:grid; grid-template-columns:240px 1fr; min-height:80vh; }
+
+  /* SIDEBAR */
+  .sidebar { padding:40px 32px; border-right:1px solid var(--border); position:sticky; top:68px; height:fit-content; }
+  .filter-section { margin-bottom:40px; }
+  .filter-title { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); font-weight:500; margin-bottom:16px; }
+  .filter-options { display:flex; flex-direction:column; gap:10px; }
+  .filter-option { display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .filter-option input { display:none; }
+  .filter-checkbox {
+    width:16px; height:16px; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .filter-option input:checked ~ .filter-label-wrap .filter-checkbox,
+  .filter-checkbox.checked { background:var(--charcoal); border-color:var(--charcoal); }
+  .filter-checkbox.checked::after { content:'✓'; color:#fff; font-size:10px; }
+  .filter-label { font-size:13px; color:var(--charcoal); transition:color 0.2s; }
+  .filter-count { font-size:11px; color:var(--muted); margin-left:auto; }
+  .price-range { width:100%; }
+  .price-inputs { display:flex; gap:10px; margin-top:12px; }
+  .price-input { flex:1; border:1px solid var(--border); background:none; padding:8px 12px; font-size:12px; font-family:'DM Sans',sans-serif; color:var(--charcoal); outline:none; }
+  .price-input:focus { border-color:var(--charcoal); }
+  .apply-btn { width:100%; margin-top:12px; background:var(--charcoal); color:var(--cream); border:none; padding:12px; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.3s; }
+  .apply-btn:hover { background:var(--gold); }
+
+  /* MAIN */
+  .shop-main { padding:40px; }
+  .shop-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:40px; }
+  .active-filters { display:flex; gap:8px; flex-wrap:wrap; }
+  .filter-tag { background:var(--charcoal); color:var(--cream); font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:6px 14px; display:flex; align-items:center; gap:8px; }
+  .filter-tag-remove { cursor:pointer; opacity:0.6; transition:opacity 0.2s; }
+  .filter-tag-remove:hover { opacity:1; }
+  .sort-select { border:1px solid var(--border); background:none; padding:10px 20px; font-size:12px; letter-spacing:1px; font-family:'DM Sans',sans-serif; color:var(--charcoal); outline:none; cursor:pointer; appearance:none; padding-right:36px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%231A1A18'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+
+  /* PRODUCTS */
+  .products-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:32px; }
+  .product-card { cursor:pointer; }
+  .product-image { aspect-ratio:3/4; background:linear-gradient(135deg,#2a2a24,#3d3d35); display:flex; align-items:center; justify-content:center; font-size:64px; position:relative; margin-bottom:16px; overflow:hidden; transition:transform 0.4s; }
+  .product-card:hover .product-image { transform:scale(1.02); }
+  .product-overlay { position:absolute; inset:0; background:rgba(26,26,24,0.6); display:flex; align-items:flex-end; padding:20px; opacity:0; transition:opacity 0.3s; }
+  .product-card:hover .product-overlay { opacity:1; }
+  .product-overlay-btn { width:100%; background:var(--cream); color:var(--charcoal); border:none; padding:13px; font-size:10px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; transition:background 0.3s; }
+  .product-overlay-btn:hover { background:var(--gold); }
+  .product-tag { position:absolute; top:14px; left:14px; background:var(--gold); color:var(--charcoal); font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:700; padding:4px 10px; }
+  .product-tag.sale { background:var(--charcoal); color:var(--cream); }
+  .wishlist-btn { position:absolute; top:14px; right:14px; background:rgba(245,240,232,0.85); border:none; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; opacity:0; transition:opacity 0.3s; }
+  .product-card:hover .wishlist-btn { opacity:1; }
+  .product-category { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .product-name { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:400; margin-bottom:8px; }
+  .product-price-row { display:flex; align-items:center; gap:10px; }
+  .product-price { font-size:16px; font-weight:500; }
+  .product-price-old { font-size:13px; color:var(--muted); text-decoration:line-through; }
+  .stars { color:var(--gold); font-size:11px; margin-top:6px; }
+
+  /* PAGINATION */
+  .pagination { display:flex; justify-content:center; gap:4px; margin-top:60px; padding-top:40px; border-top:1px solid var(--border); }
+  .page-btn { width:40px; height:40px; border:1px solid var(--border); background:none; display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .page-btn:hover, .page-btn.active { background:var(--charcoal); color:var(--cream); border-color:var(--charcoal); }
+  .page-btn.active { pointer-events:none; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:30px; right:30px; z-index:1000; background:var(--charcoal); color:var(--cream); padding:16px 28px; font-size:13px; transform:translateY(100px); opacity:0; transition:all 0.4s cubic-bezier(0.16,1,0.3,1); display:flex; align-items:center; gap:10px; }
+  .toast.show { transform:none; opacity:1; }
+  .toast-icon { color:var(--gold); }
+
+  /* FOOTER MINI */
+  footer { background:var(--charcoal); color:var(--cream); padding:40px 60px; display:flex; justify-content:space-between; align-items:center; margin-top:80px; }
+  .footer-logo { font-family:'Cormorant Garamond',serif; font-size:22px; letter-spacing:5px; }
+  .footer-copy { font-size:12px; color:rgba(245,240,232,0.3); }
+  .footer-links-row { display:flex; gap:24px; }
+  .footer-links-row a { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(245,240,232,0.5); text-decoration:none; transition:color 0.3s; }
+  .footer-links-row a:hover { color:var(--cream); }
+
+  @media(max-width:900px) {
+    nav { padding:18px 24px; }
+    .nav-links { display:none; }
+    .page-header { padding:40px 24px 30px; }
+    .shop-layout { grid-template-columns:1fr; }
+    .sidebar { display:none; }
+    .shop-main { padding:24px; }
+    .products-grid { grid-template-columns:1fr 1fr; gap:20px; }
+    footer { flex-direction:column; gap:20px; padding:30px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">LUXE</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="shop.html" class="active">Shop</a></li>
+    <li><a href="shop.html">Collections</a></li>
+    <li><a href="shop.html">New In</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-icon" onclick="alert('Search')">🔍</button>
+    <button class="nav-icon" onclick="goToCart()" style="position:relative">
+      🛒<span class="cart-badge" id="nav-cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-left">
+    <p class="breadcrumb"><a href="index.html">Home</a> / Shop</p>
+    <h1 class="page-title">All <em>Products</em></h1>
+  </div>
+  <p class="result-count" id="result-count">Showing 12 of 48 products</p>
+</div>
+
+<div class="shop-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="filter-section">
+      <p class="filter-title">Category</p>
+      <div class="filter-options" id="cat-filters">
+        <label class="filter-option" onclick="toggleFilter(this,'Women')">
+          <div class="filter-checkbox" id="cb-Women"></div>
+          <span class="filter-label">Women</span>
+          <span class="filter-count">142</span>
+        </label>
+        <label class="filter-option" onclick="toggleFilter(this,'Men')">
+          <div class="filter-checkbox" id="cb-Men"></div>
+          <span class="filter-label">Men</span>
+          <span class="filter-count">98</span>
+        </label>
+        <label class="filter-option" onclick="toggleFilter(this,'Bags')">
+          <div class="filter-checkbox" id="cb-Bags"></div>
+          <span class="filter-label">Bags</span>
+          <span class="filter-count">67</span>
+        </label>
+        <label class="filter-option" onclick="toggleFilter(this,'Jewellery')">
+          <div class="filter-checkbox" id="cb-Jewellery"></div>
+          <span class="filter-label">Jewellery</span>
+          <span class="filter-count">53</span>
+        </label>
+        <label class="filter-option" onclick="toggleFilter(this,'Footwear')">
+          <div class="filter-checkbox" id="cb-Footwear"></div>
+          <span class="filter-label">Footwear</span>
+          <span class="filter-count">44</span>
+        </label>
+      </div>
+    </div>
+    <div class="filter-section">
+      <p class="filter-title">Price Range</p>
+      <div class="price-inputs">
+        <input class="price-input" id="price-min" type="number" placeholder="Min $" value="0">
+        <input class="price-input" id="price-max" type="number" placeholder="Max $" value="1000">
+      </div>
+      <button class="apply-btn" onclick="applyPriceFilter()">Apply</button>
+    </div>
+    <div class="filter-section">
+      <p class="filter-title">Availability</p>
+      <div class="filter-options">
+        <label class="filter-option" onclick="toggleFilter(this,'InStock')">
+          <div class="filter-checkbox" id="cb-InStock"></div>
+          <span class="filter-label">In Stock</span>
+        </label>
+        <label class="filter-option" onclick="toggleFilter(this,'Sale')">
+          <div class="filter-checkbox" id="cb-Sale"></div>
+          <span class="filter-label">On Sale</span>
+        </label>
+      </div>
+    </div>
+    <div class="filter-section">
+      <p class="filter-title">Rating</p>
+      <div class="filter-options">
+        <label class="filter-option" onclick="toggleFilter(this,'5star')">
+          <div class="filter-checkbox" id="cb-5star"></div>
+          <span class="filter-label">★★★★★</span>
+        </label>
+        <label class="filter-option" onclick="toggleFilter(this,'4star')">
+          <div class="filter-checkbox" id="cb-4star"></div>
+          <span class="filter-label">★★★★+</span>
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="shop-main">
+    <div class="shop-toolbar">
+      <div class="active-filters" id="active-filters"></div>
+      <select class="sort-select" id="sort-select" onchange="sortProducts()">
+        <option>Sort: Featured</option>
+        <option>Price: Low to High</option>
+        <option>Price: High to Low</option>
+        <option>Newest First</option>
+        <option>Best Rated</option>
+      </select>
+    </div>
+    <div class="products-grid" id="products-grid"></div>
+    <div class="pagination">
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">3</button>
+      <button class="page-btn">4</button>
+      <button class="page-btn">›</button>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <div class="footer-logo">LUXE</div>
+  <div class="footer-links-row">
+    <a href="#">Help</a><a href="#">Shipping</a><a href="#">Returns</a>
+  </div>
+  <p class="footer-copy">© 2025 LUXE</p>
+</footer>
+
+<div class="toast" id="toast"><span class="toast-icon">✓</span><span id="toast-msg"></span></div>
+
+<script>
+const allProducts = [
+  { id:1, name:'Cashmere Overcoat', category:'Women', price:480, oldPrice:640, emoji:'🧥', tag:'NEW', stars:5, sale:true },
+  { id:2, name:'Structured Leather Tote', category:'Bags', price:320, emoji:'👜', tag:'BESTSELLER', stars:5 },
+  { id:3, name:'Block Heel Mule', category:'Footwear', price:195, emoji:'👠', stars:4 },
+  { id:4, name:'Silk Wrap Dress', category:'Women', price:380, emoji:'👗', tag:'NEW', stars:5 },
+  { id:5, name:'Merino Crewneck', category:'Men', price:145, emoji:'👕', stars:4 },
+  { id:6, name:'Gold Chain Necklace', category:'Jewellery', price:265, emoji:'📿', tag:'NEW', stars:5 },
+  { id:7, name:'Suede Chelsea Boot', category:'Footwear', price:290, oldPrice:380, emoji:'👢', stars:4, sale:true },
+  { id:8, name:'Linen Wide Trousers', category:'Women', price:175, emoji:'👖', stars:4 },
+  { id:9, name:'Slim Wool Blazer', category:'Men', price:520, emoji:'🧣', tag:'BESTSELLER', stars:5 },
+  { id:10, name:'Mini Crossbody Bag', category:'Bags', price:195, emoji:'👛', stars:4 },
+  { id:11, name:'Diamond Stud Earrings', category:'Jewellery', price:740, emoji:'💎', tag:'LUXURY', stars:5 },
+  { id:12, name:'Tailored Trench Coat', category:'Men', price:620, oldPrice:820, emoji:'🥼', stars:5, sale:true },
+];
+
+let activeFilters = new Set();
+let filteredProducts = [...allProducts];
+
+function toggleFilter(el, name) {
+  const cb = document.getElementById('cb-' + name);
+  if (activeFilters.has(name)) {
+    activeFilters.delete(name);
+    cb.classList.remove('checked');
+  } else {
+    activeFilters.add(name);
+    cb.classList.add('checked');
+  }
+  renderFilterTags();
+  renderProducts();
+}
+function removeFilter(name) {
+  activeFilters.delete(name);
+  const cb = document.getElementById('cb-' + name);
+  if (cb) cb.classList.remove('checked');
+  renderFilterTags();
+  renderProducts();
+}
+function renderFilterTags() {
+  const cont = document.getElementById('active-filters');
+  cont.innerHTML = '';
+  activeFilters.forEach(f => {
+    const tag = document.createElement('div');
+    tag.className = 'filter-tag';
+    tag.innerHTML = `${f} <span class="filter-tag-remove" onclick="removeFilter('${f}')">✕</span>`;
+    cont.appendChild(tag);
+  });
+}
+function applyPriceFilter() {
+  renderProducts();
+  showToast('Price filter applied');
+}
+function renderProducts() {
+  const min = parseInt(document.getElementById('price-min').value) || 0;
+  const max = parseInt(document.getElementById('price-max').value) || 99999;
+  const catFilters = ['Women','Men','Bags','Jewellery','Footwear'].filter(c => activeFilters.has(c));
+  let products = allProducts.filter(p => {
+    if (p.price < min || p.price > max) return false;
+    if (catFilters.length > 0 && !catFilters.includes(p.category)) return false;
+    if (activeFilters.has('Sale') && !p.sale) return false;
+    if (activeFilters.has('5star') && p.stars < 5) return false;
+    return true;
+  });
+  const sort = document.getElementById('sort-select').value;
+  if (sort === 'Price: Low to High') products.sort((a,b) => a.price - b.price);
+  if (sort === 'Price: High to Low') products.sort((a,b) => b.price - a.price);
+  if (sort === 'Best Rated') products.sort((a,b) => b.stars - a.stars);
+  filteredProducts = products;
+  document.getElementById('result-count').textContent = `Showing ${products.length} of ${allProducts.length} products`;
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = products.length ? products.map(p => `
+    <div class="product-card" onclick="viewProduct(${p.id})" style="animation:fadeUp 0.5s ease both">
+      <div class="product-image">
+        ${p.emoji}
+        ${p.tag ? `<div class="product-tag${p.sale?' sale':''}">${p.tag}</div>` : (p.sale ? '<div class="product-tag sale">SALE</div>' : '')}
+        <div class="product-overlay">
+          <button class="product-overlay-btn" onclick="event.stopPropagation();addToCart('${p.name}','$${p.price}')">Add to Cart</button>
+        </div>
+        <button class="wishlist-btn" onclick="event.stopPropagation();showToast('Added to wishlist ♥')">♡</button>
+      </div>
+      <p class="product-category">${p.category}</p>
+      <h3 class="product-name">${p.name}</h3>
+      <div class="product-price-row">
+        <span class="product-price">$${p.price}</span>
+        ${p.oldPrice ? `<span class="product-price-old">$${p.oldPrice}</span>` : ''}
+      </div>
+      <div class="stars">${'★'.repeat(p.stars)}${'☆'.repeat(5-p.stars)}</div>
+    </div>
+  `).join('') : '<div style="grid-column:1/-1;text-align:center;padding:80px 0;color:var(--muted);font-family:Cormorant Garamond,serif;font-size:24px;font-weight:300;">No products match your filters</div>';
+}
+function sortProducts() { renderProducts(); }
+function viewProduct(id) { window.location.href = `product.html?id=${id}`; }
+function goToCart() { window.location.href = 'cart.html'; }
+function getCart() { try { return JSON.parse(localStorage.getItem('luxe_cart')||'[]'); } catch { return []; } }
+function saveCart(cart) { localStorage.setItem('luxe_cart',JSON.stringify(cart)); }
+function updateCartCount() {
+  const count = getCart().reduce((a,b) => a+b.qty, 0);
+  document.getElementById('nav-cart-count').textContent = count;
+}
+function addToCart(name, price) {
+  const cart = getCart();
+  const ex = cart.find(i => i.name===name);
+  if (ex) ex.qty++; else cart.push({name,price,qty:1});
+  saveCart(cart); updateCartCount();
+  showToast(`"${name}" added to cart`);
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+document.querySelectorAll('.page-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+renderProducts();
+updateCartCount();
+</script>
+<style>
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+</style>
+</body>
+</html>
